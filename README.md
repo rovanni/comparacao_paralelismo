@@ -1,6 +1,9 @@
-# Prime Number Search Performance Comparison in C++ / Comparativo de Desempenho: Busca de Números Primos em C++
+<a name="inicio"></a>
+<a name="english"></a>
+**[English Version](#english)** | **[Versão em Português](#português)**
+<a name="português"></a>
 
-[English](#english-version) | [Português](#versão-em-português)
+# Prime Number Search Performance Comparison in C++ / Comparativo de Desempenho: Busca de Números Primos em C++
 
 ---
 
