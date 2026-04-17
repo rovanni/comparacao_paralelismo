@@ -1,16 +1,16 @@
-﻿#include <iostream>   // Para entrada e saída padrão (cout, cin, cerr, etc.)
-#include <vector>     // Para usar o container std::vector (vetor dinâmico)
-#include <thread>     // Para criar e gerenciar threads (programação concorrente)
-#include <mutex>      // Para sincronização entre threads (evitar condições de corrida)
-#include <chrono>     // Para manipulação de tempo (medir durações, pausas, timestamps)
-#include <omp.h>      // Para usar OpenMP (paralelismo baseado em diretivas, ex: #pragma omp parallel)
-#include <tbb/parallel_for.h>        // Para paralelismo com Intel TBB (parallel_for - laços paralelos)
-#include <tbb/concurrent_vector.h>   // Para vetor thread-safe da Intel TBB (inserções concorrentes seguras)
-#include <locale>     // Para configurar localização (idioma, formatação de números, datas, etc.)
-#include <iomanip>    // Para manipuladores de formatação de saída (setw, setprecision, etc.)
-#include <algorithm>  // Para funções genéricas de algoritmos (sort, find, copy, etc.)
+﻿#include <iostream>   // Entrada e saída padrão (cout, cin, etc.)
+#include <vector>     // Vetor dinâmico (std::vector)
+#include <thread>     // Threads padrão C++
+#include <mutex>      // Mutex para sincronização entre threads
+#include <chrono>     // Medição de tempo
+#include <omp.h>      // OpenMP (paralelismo por diretivas)
+#include <tbb/parallel_for.h>        // Intel TBB: laços paralelos
+#include <tbb/concurrent_vector.h>   // Intel TBB: vetor thread-safe
+#include <locale>     // Localização (idioma, formatação)
+#include <iomanip>    // Formatação de saída (setw, setprecision)
+#include <algorithm>  // Algoritmos genéricos (sort, etc.)
 
-// Configuração de cores no console (Windows e Unix-like)
+// Funções auxiliares para colorir o console (opcional, só para destaque)
 #ifdef _WIN32
 #include <windows.h>
 void setConsoleColorGreen() {
@@ -40,45 +40,42 @@ bool is_prime(int n) {
 }
 
 // ========================================================================
-// VERSÃO 1: SEQUENCIAL (sem threads)
+// VERSÃO 1: SEQUENCIAL (sem paralelismo)
 // ========================================================================
 double versao_sequencial(int N, std::vector<int>& resultado) {
     auto start = std::chrono::high_resolution_clock::now();
-
+    // Percorre todos os números de 1 até N
     for (int i = 1; i <= N; ++i) {
         if (is_prime(i)) {
-            resultado.push_back(i);
+            resultado.push_back(i); // Se for primo, adiciona ao vetor
         }
     }
-
     auto end = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration<double>(end - start).count();
+    return std::chrono::duration<double>(end - start).count(); // Retorna tempo em segundos
 }
 
 // ========================================================================
 // VERSÃO 2: COM STD::THREAD (múltiplas threads manuais + mutex)
 // ========================================================================
 double versao_std_thread(int N, int num_threads, std::vector<int>& resultado) {
-    std::mutex mtx;
-    std::vector<std::thread> threads;
+    std::mutex mtx; // Mutex para proteger o vetor resultado
+    std::vector<std::thread> threads; // Vetor de threads
     auto start = std::chrono::high_resolution_clock::now();
-
-    int block = N / num_threads;
+    int block = N / num_threads; // Divide o trabalho em blocos
     for (int i = 0; i < num_threads; ++i) {
         int start_idx = i * block + 1;
         int end_idx = (i == num_threads - 1) ? N + 1 : start_idx + block;
+        // Cada thread processa um bloco
         threads.emplace_back([start_idx, end_idx, &resultado, &mtx]() {
             for (int j = start_idx; j < end_idx; ++j) {
                 if (is_prime(j)) {
-                    std::lock_guard<std::mutex> lock(mtx);
+                    std::lock_guard<std::mutex> lock(mtx); // Protege acesso ao vetor
                     resultado.push_back(j);
                 }
             }
         });
     }
-
-    for (auto& t : threads) t.join();
-
+    for (auto& t : threads) t.join(); // Espera todas as threads terminarem
     auto end = std::chrono::high_resolution_clock::now();
     return std::chrono::duration<double>(end - start).count();
 }
@@ -88,24 +85,21 @@ double versao_std_thread(int N, int num_threads, std::vector<int>& resultado) {
 // ========================================================================
 double versao_openmp(int N, std::vector<int>& resultado) {
     double start_time = omp_get_wtime();
-
+    // Cria várias threads automaticamente
 #pragma omp parallel
     {
-        std::vector<int> local_primes;
-
+        std::vector<int> local_primes; // Cada thread tem seu vetor local
 #pragma omp for
         for (int i = 1; i <= N; ++i) {
             if (is_prime(i)) {
                 local_primes.push_back(i);
             }
         }
-
 #pragma omp critical
         {
             resultado.insert(resultado.end(), local_primes.begin(), local_primes.end());
         }
     }
-
     double end_time = omp_get_wtime();
     return end_time - start_time;
 }
@@ -115,13 +109,12 @@ double versao_openmp(int N, std::vector<int>& resultado) {
 // ========================================================================
 double versao_tbb(int N, tbb::concurrent_vector<int>& resultado) {
     auto start = std::chrono::high_resolution_clock::now();
-
+    // Executa o laço em paralelo, cada iteração pode rodar em uma thread
     tbb::parallel_for(1, N + 1, [&resultado](int i) {
         if (is_prime(i)) {
-            resultado.push_back(i);
+            resultado.push_back(i); // concurrent_vector é thread-safe
         }
     });
-
     auto end = std::chrono::high_resolution_clock::now();
     return std::chrono::duration<double>(end - start).count();
 }
@@ -130,15 +123,16 @@ double versao_tbb(int N, tbb::concurrent_vector<int>& resultado) {
 // FUNÇÃO PRINCIPAL — EXECUTA E COMPARA TODAS AS VERSÕES
 // ========================================================================
 int main() {
-    // Configurações de localidade e console
+    // Configurações de localidade e console (para acentuação e cor)
     std::setlocale(LC_ALL, "pt_BR.UTF-8");
 #ifdef _WIN32
-    system("chcp 65001 > nul"); // Tenta forçar UTF-8 no Windows
+    system("chcp 65001 > nul"); // Força UTF-8 no Windows
 #endif
 
-    const int N = 10000000;
-	const int NUM_THREADS = std::thread::hardware_concurrency(); // Usa o número máximo de threads disponíveis
-	//const int NUM_THREADS = 4; // Defina o número de threads desejado
+    // Parâmetros do teste
+    const int N = 100000000; // Limite superior para busca de primos
+    const int NUM_THREADS = std::thread::hardware_concurrency(); // Usa todos os núcleos disponíveis
+    //const int NUM_THREADS = 4; // (opcional) Defina manualmente o número de threads
 
     std::cout << "=== Comparacao de Desempenho: Busca de Numeros Primos ate " << N << " ===\n";
     std::cout << "Sistema: " << std::thread::hardware_concurrency() << " nucleos logicos disponiveis.\n\n";
@@ -176,11 +170,6 @@ int main() {
     // --------------------------------------------------------------------
     // Comparacao de desempenho — Speedup + Destaque do VENCEDOR
     // --------------------------------------------------------------------
-    std::cout << "\n"
-        << std::string(80, '=') << "\n"
-        << " [DESEMPENHO] COMPARACAO DE DESEMPENHO — QUAL FOI O MAIS RAPIDO?" << "\n"
-        << std::string(80, '=') << "\n\n";
-
     double speedup_thread = tempo_seq / tempo_thread;
     double speedup_omp = tempo_seq / tempo_omp;
     double speedup_tbb = tempo_seq / tempo_tbb;
@@ -202,29 +191,34 @@ int main() {
         return a.tempo < b.tempo;
     });
 
+    // Tabela comparativa de tempos e speedups
+    std::cout << "\n" << std::string(80, '=') << "\n";
+    std::cout << "TABELA DE COMPARACAO DE TEMPO E SPEEDUP\n";
+    std::cout << std::string(80, '=') << "\n";
     std::cout << std::left
-        << std::setw(30) << "Implementacao"
+        << std::setw(20) << "Versao"
         << std::setw(15) << "Tempo (s)"
-        << std::setw(20) << "Speedup (vs Seq)"
-        << "Classificacao\n"
-        << std::string(80, '-') << "\n";
+        << std::setw(15) << "Speedup"
+        << "\n" << std::string(80, '-') << "\n";
+    std::cout << std::left
+        << std::setw(20) << "Sequencial"
+        << std::setw(15) << std::fixed << std::setprecision(4) << tempo_seq
+        << std::setw(15) << "1.00x" << "\n";
+    std::cout << std::left
+        << std::setw(20) << ("std::thread (" + std::to_string(NUM_THREADS) + ")")
+        << std::setw(15) << std::fixed << std::setprecision(4) << tempo_thread
+        << std::setw(15) << std::fixed << std::setprecision(2) << speedup_thread << "x\n";
+    std::cout << std::left
+        << std::setw(20) << "OpenMP"
+        << std::setw(15) << std::fixed << std::setprecision(4) << tempo_omp
+        << std::setw(15) << std::fixed << std::setprecision(2) << speedup_omp << "x\n";
+    std::cout << std::left
+        << std::setw(20) << "TBB"
+        << std::setw(15) << std::fixed << std::setprecision(4) << tempo_tbb
+        << std::setw(15) << std::fixed << std::setprecision(2) << speedup_tbb << "x\n";
+    std::cout << std::string(80, '-') << "\n\n";
 
-    for (size_t i = 0; i < resultados.size(); ++i) {
-        std::string medalha = (i == 0) ? "[VENCEDOR!] [RAPIDO!]" :
-            (i == 1) ? "[2o Lugar]" : "[3o Lugar]";
-
-        if (i == 0) setConsoleColorGreen();
-
-        std::cout << std::left
-            << std::setw(30) << resultados[i].nome
-            << std::setw(15) << std::fixed << std::setprecision(4) << resultados[i].tempo
-            << std::setw(20) << std::fixed << std::setprecision(2) << resultados[i].speedup << "x"
-            << medalha
-            << "\n";
-
-        if (i == 0) resetConsoleColor();
-    }
-
+    // Destaque para o vencedor
     std::cout << "\n"
         << std::string(80, '-') << "\n";
     std::cout << "[VENCEDOR] VERSAO MAIS RAPIDA: ";

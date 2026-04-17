@@ -259,3 +259,81 @@ MAIS [RAPIDO!]: Speedup de 8.18x em relacao a versao sequencial!
 [OK] Comparacao concluida com sucesso!
 
 [⬆️ Back to top](#inicio) | [Voltar ao início](#inicio)
+
+# Comparativo de Desempenho: Busca de Números Primos em C++
+
+Este projeto compara diferentes abordagens de programação paralela em C++ para encontrar todos os números primos até um limite N. São avaliadas as versões:
+- Sequencial
+- std::thread
+- OpenMP
+- Intel TBB
+
+## Passo a Passo para Instalação e Execução (Windows + Visual Studio)
+
+### 1. Instale o vcpkg (se ainda não tiver)
+Abra o PowerShell e execute:
+```sh
+git clone https://github.com/microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.bat
+```
+
+### 2. Instale a biblioteca TBB
+No diretório do vcpkg:
+```sh
+./vcpkg install tbb:x64-windows
+```
+
+### 3. Integre o vcpkg ao Visual Studio
+```sh
+./vcpkg integrate install
+```
+Isso faz com que o Visual Studio encontre automaticamente as bibliotecas instaladas.
+
+### 4. Abra o projeto `.sln` no Visual Studio
+- Certifique-se de que o toolset do projeto está compatível (ex: v143, v145, v142, etc).
+- Compile normalmente (Ctrl+Shift+B).
+
+### 5. Execute o programa
+- O console mostrará o tempo de execução de cada versão e uma tabela comparativa.
+
+---
+
+## Passo a Passo para Linux (g++/make)
+
+1. Instale as dependências:
+```sh
+sudo apt-get update
+sudo apt-get install build-essential libtbb-dev libomp-dev
+```
+
+2. Compile:
+```sh
+g++ -std=c++17 -O3 comparacao_paralelismo.cpp -o prime_benchmark -fopenmp -ltbb -pthread
+```
+
+3. Execute:
+```sh
+./prime_benchmark
+```
+
+---
+
+## Saída Esperada
+O programa executa todas as versões e exibe uma tabela comparando o tempo e o speedup de cada abordagem, além de destacar a mais rápida.
+
+---
+
+## Dicas
+- Se der erro de toolset no Visual Studio, ajuste para o toolset instalado (clique com o direito no projeto > Propriedades > General > Platform Toolset).
+- Se der erro de include do TBB, confira se o vcpkg está integrado e o pacote tbb:x64-windows está instalado.
+- Para testar com outros valores de N, altere a constante `N` no início do main.
+
+---
+
+## Créditos
+Projeto didático para ensino de paralelismo em C++.
+
+---
+
+[⬆️ Voltar ao topo](#comparativo-de-desempenho-busca-de-números-primos-em-c)
