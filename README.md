@@ -1,7 +1,7 @@
 <a name="inicio"></a>
 <a name="english"></a>
 **[English Version](#english)** | **[Versão em Português](#português)**
-<a name="português"></a>
+
 
 # Prime Number Search Performance Comparison in C++ / Comparativo de Desempenho: Busca de Números Primos em C++
 
@@ -101,7 +101,11 @@ FASTEST: Speedup of 8.18x compared to sequential version!
 - To test with other N values, change the `N` constant at the beginning of `main`.
 
 ---
-
+---
+## 👨‍🏫 Educational Purpose
+This project was developed to facilitate the teaching of parallelism in C++ and to demonstrate, in practice, the impact of different techniques on computational performance.
+---
+<a name="português"></a>
 ## 🇧🇷 Versão em Português
 
 Este projeto demonstra, de forma didática, como diferentes técnicas de paralelismo em C++ afetam o desempenho na busca de números primos até um limite N. São comparadas as abordagens:
@@ -197,8 +201,8 @@ MAIS [RAPIDO!]: Speedup de 8.18x em relacao a versao sequencial!
 
 ---
 
-## 👨‍🏫 Educational Purpose / Objetivo Didático
-This project was developed to facilitate the teaching of parallelism in C++ and to demonstrate, in practice, the impact of different techniques on computational performance.
+## 👨‍🏫 Objetivo Didático
+Este projeto foi desenvolvido para facilitar o ensino de paralelismo em C++ e para demonstrar, na prática, o impacto de diferentes técnicas no desempenho computacional.
 
 ---
 
